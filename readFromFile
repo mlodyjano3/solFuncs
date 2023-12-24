@@ -1,0 +1,91 @@
+package functions
+
+import (
+	"encoding/csv"
+	"fmt"
+	"log"
+	"os"
+	"path/filepath"
+)
+
+type wallet struct {
+	Alias      string
+	PrivateKey string
+}
+
+func ReadFromCSVfile(path string) ([]wallet, error) {
+	var wallets []wallet
+
+	data, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer data.Close()
+
+	csvData := csv.NewReader(data)
+	records, err := csvData.ReadAll()
+	if err != nil {
+		return nil, err
+	}
+	for _, record := range records {
+		if len(record) != 2 {
+			fmt.Println(path)
+			return nil, fmt.Errorf("invalid CSV format")
+		}
+
+		w := wallet{
+			Alias:      record[0],
+			PrivateKey: record[1],
+		}
+		wallets = append(wallets, w)
+	}
+	return wallets[1:], nil
+}
+
+func ReadDistributeWallets(path string) ([]string, error) {
+	var wallets []string
+	data, err := os.Open(path)
+	if err != nil {
+		log.Fatalf("Cannot open file, err: %v", err)
+		return nil, err
+	}
+	defer data.Close()
+
+	csvData := csv.NewReader(data)
+	records, err := csvData.ReadAll()
+	if err != nil {
+		log.Fatalf("Cannot get records, err: %v", err)
+		return nil, err
+	}
+	for _, record := range records {
+		if len(record) != 1 {
+			return nil, fmt.Errorf("invalid CSV format")
+		}
+		wallets = append(wallets, record[0])
+	}
+	return wallets[1:], nil
+}
+
+func FindFile(name string) string {
+	currentDir, err := os.Getwd()
+	if err != nil {
+		fmt.Println("Error:", err)
+		return ""
+	}
+
+	// Specify the filename you want to find in the directory
+	filename := name
+
+	// Construct the full path by joining the current directory with the filename
+	fullPath := filepath.Join(currentDir, filename)
+
+	// Check if the file exists
+	if _, err := os.Stat(fullPath); err == nil {
+		return fullPath
+	} else if os.IsNotExist(err) {
+		fmt.Printf("File '%s' not found in the directory: %s\n", filename, currentDir)
+	} else {
+		fmt.Println("Error:", err)
+	}
+	return ""
+}
