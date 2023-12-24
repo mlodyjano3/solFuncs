@@ -1,0 +1,57 @@
+package functions
+
+import (
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"log"
+	"strconv"
+	"strings"
+)
+
+func isInList(list []int, target int) bool {
+	for _, item := range list {
+		if item == target {
+			return true // Return false if the target is found in the list
+		}
+	}
+	return false // Return true if the target is not found in the list
+}
+
+func findPrivateKeyByAlias(wallets []wallet, alias string) (string, error) {
+	for _, w := range wallets {
+		if w.Alias == alias {
+			return w.PrivateKey, nil
+		}
+	}
+	return "", fmt.Errorf("Alias not found")
+}
+
+func _(input string) (float64, error) {
+	num, err := strconv.ParseFloat(input, 64)
+	if err != nil {
+		return 0, err
+	}
+	return num, nil
+}
+
+func ReadConfig() (string, string) {
+	type config struct {
+		LicenseKey string
+		Rpc        string
+	}
+	content, err := ioutil.ReadFile("./config.json")
+	if err != nil {
+		log.Fatal("Error when opening file: ", err)
+	}
+	var payload config
+	err = json.Unmarshal(content, &payload)
+	if err != nil {
+		log.Fatal("Error during Unmarshal(): ", err)
+	}
+	return removeSpacesLeft(payload.LicenseKey), removeSpacesLeft(payload.Rpc)
+}
+
+func removeSpacesLeft(s string) string {
+	return strings.TrimLeft(s, " ")
+}
